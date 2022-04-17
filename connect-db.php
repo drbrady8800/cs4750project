@@ -55,6 +55,7 @@ $dsn = "mysql:host=$host;dbname=$dbname";
 try 
 {
    $db = new PDO($dsn, $username, $password);
+   $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
    
    // dispaly a message to let us know that we are connected to the database 
    // echo "<p>You are connected to the database --- dsn=$dsn, user=$username, pwd=$password </p>";

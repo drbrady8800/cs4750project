@@ -1,5 +1,10 @@
+<?php
+include "header.php";
+?>
 
-    <header class="bg-primary-gradient py-5">
+<!-- Begin Meeting -->
+<!DOCTYPE HTML>
+<header class="bg-primary-gradient py-5">
       <div class="container py-5">
         <div class="row py-5">
           <div class="col">
@@ -220,3 +225,7 @@
         </div>
       </div>
     </header>
+
+<?php
+include "footer.php";
+?>
