@@ -95,7 +95,7 @@
             role="button"
             data-bss-disabled-mobile="true"
             data-bss-hover-animate="pulse"
-            href="signup.html"
+            href="login.html"
             >Log In</a
           >
         </div>
@@ -161,13 +161,14 @@
                         <div class="mb-3">
                           <input
                             class="form-control"
-                            type="email"
+                            type="text"
                             name="computingID"
                             placeholder="computing ID"
                             autofocus=""
                             minlength="6"
                             maxlength="9"
                             required=""
+                            title="Please enter a valid UVA computing id"
                           />
                         </div>
                         <div class="mb-3">
@@ -178,7 +179,8 @@
                             placeholder="Password"
                             minlength="8"
                             maxlength="64"
-                            pattern="/^[a-zA-Z0-9.!#$%&amp;’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
+                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                            title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
                             required=""
                           />
                         </div>
@@ -225,9 +227,10 @@
                         <div class="mb-3">
                           <input
                             class="form-control"
-                            type="email"
+                            type="text"
                             name="first-name"
                             placeholder="First Name"
+                            required=""
                             minlength="1"
                             maxlength="64"
                           />
@@ -235,9 +238,10 @@
                         <div class="mb-3">
                           <input
                             class="form-control"
-                            type="email"
+                            type="text"
                             name="last-name"
                             placeholder="Last Name"
+                            required=""
                             minlength="1"
                             maxlength="64"
                           />
@@ -249,14 +253,14 @@
                             name="email"
                             placeholder="Email"
                             required=""
-                            pattern="/^[a-zA-Z0-9.!#$%&amp;’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/"
+                            pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$"
                             minlength="3"
                           />
                         </div>
                         <div class="mb-3">
                           <input
                             class="form-control"
-                            type="email"
+                            type="text"
                             name="computingID"
                             placeholder="computing ID"
                             required=""
@@ -270,6 +274,8 @@
                             type="password"
                             name="password"
                             placeholder="Password"
+                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}"
+                            title="Must contain at least one number and one uppercase and lowercase letter, and at least 8 or more characters"
                             required=""
                             minlength="8"
                             maxlength="24"
