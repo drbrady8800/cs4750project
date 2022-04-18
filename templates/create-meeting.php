@@ -144,6 +144,31 @@
         </div>
       </div>
     </section>
+    <div class="card-body">
+                    <div class="table-responsive text-start">
+                      <table class="table table-striped table-hover">
+                        <thead>
+                          <tr>
+                            <th>Start</th>
+                            <th>End</th>
+                            <th>Room</th>
+                            <th>Participants</th>
+                            <th class="text-center">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <!-- Begin Meeting Row Generation -->
+                          <?php
+                            if (isset($meeting_data) )
+                            {
+                              echo generateMeetingOptions($meeting_data);
+                            }
+                          ?>
+                          <!-- End Meeting Row Generation -->
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
     <!-- end create meeting -->
 
 <?php
