@@ -5,6 +5,21 @@
   require('../query-funcs.php');
 
   $buildings = getBuildings();
+  if ( !isset($_SESSION['computing_id'])) {
+    echo '<script>alert("Please login")</script>';
+    echo '<script>window.location.replace("login.php");</script>';
+  }
+
+  debug_to_console("YO");
+  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    debug_to_console("HERE");
+    if (!empty($_POST['action']) && $_POST['action'] == 'Submit') {
+      $start_datetime = $_POST['meeting_date'] . $_POST['meeting-time-start'];
+      $end_datetime = $_POST['meeting_date'] . $_POST['meeting-time-end'];
+      $list_of_possible_meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], $_POST['building-name'], $_POST['tv-required'], $_POST['whiteboard-required']);
+      debug_to_console($list_of_possible_meetings);
+    }
+  }
 ?>
 
 <!-- Begin Create Meeting -->
@@ -98,7 +113,7 @@
                           <input
                             class="form-check-input"
                             type="radio"
-                            name="Group"
+                            name="building-name"
                             id=<?php echo $building["building_name"] ?>
                           />
                           <label class="form-check-label" for="flexRadioDefault2"><?php echo $building["building_name"] ?></label>
@@ -116,6 +131,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-2"
+                  name="tv-required"
                 /><label class="form-check-label" for="formCheck-2"
                   >TV Required?</label
                 >
@@ -128,18 +144,19 @@
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-4"
+                  name="whiteboard-required"
                 /><label class="form-check-label" for="formCheck-4"
                   >Whiteboard Required?</label
                 >
               </div>
+              <input
+                class="btn btn-primary float-end"
+                type="submit"
+                style="margin-top: 1rem"
+                value="Submit"
+              />
             </form>
-            <button
-              class="btn btn-primary float-end"
-              type="submit"
-              style="margin-top: 1rem"
-            >
-              Submit
-            </button>
+            
           </div>
         </div>
       </div>

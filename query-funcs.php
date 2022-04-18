@@ -1,9 +1,9 @@
 <?php
 function debug_to_console($data) {
     $output = $data;
-    if (is_array($output)) {
-        $output = var_dump($data);
-    }
+    // if (is_array($output)) {
+    //     $output = var_dump($data);
+    // }
 
     echo `<script>console.log('Debug Objects: ` . $output . `' );</script>`;
 }
@@ -13,12 +13,14 @@ function getMeetingAttendees($meeting_id) {
   // Gets attendee list
   $query = "SELECT U.first_name FROM Meeting M
     JOIN User U on U.computing_id = M.owner_computing_id
-    WHERE M.meeting_id = " . $meeting_id . "
+    WHERE M.meeting_id = :meeting_id
     UNION
     SELECT U.first_name FROM Meeting_Attendee MA
     JOIN User U on U.computing_id = MA.attendee_computing_id
-    WHERE MA.meeting_id = " . $meeting_id;
-  $statement = $db->query($query);
+    WHERE MA.meeting_id = :meeting_id";
+  $statement = $db->prepare($query);
+  $statement->bindValue(':meeting_id', $meeting_id);
+  $statement->execute();
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 
@@ -51,11 +53,14 @@ function getUserMeetings($user, $sort_by) {
     JOIN Room R on R.room_id = M.room_id
     JOIN Timeslot T on T.timeslot_id = M.timeslot_id
     JOIN Building B on B.address = R.address
-    WHERE M.owner_computing_id = '" . $user . "'";
+    WHERE M.owner_computing_id = :user";
   if ($sort_by != "NONE") {
     $query .= "ORDER BY " . $sort_by;
   }
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
+  $statement->bindValue(':user', $user);
+  $statement->execute();
+
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 
@@ -86,8 +91,6 @@ function getMeetingInfo($meeting_id) {
     JOIN Building B on B.address = R.address
     WHERE M.meeting_id = '" . $meeting_id . "'";
 
-  debug_to_console($query);
-
   $statement = $db->query($query);
   $raw_data = $statement->fetch();
   $statement->closeCursor();
@@ -116,24 +119,34 @@ function editMeeting($meeting_id, $start_datetime, $end_datetime, $building_name
   $query = "UPDATE Meeting M
     SET M.room_id = (
       SELECT R.room_id from Room R
-        WHERE R.room_number = " . $room_number . "
+        WHERE R.room_number = :room_number
         AND R.address = (
             SELECT B.address FROM Building B
-            WHERE B.building_name = '" . $building_name . "'
+            WHERE B.building_name = :building_name
         )
     ), M.timeslot_id = (
         SELECT T.timeslot_id from timeslot T
-        WHERE T.start_datetime = '" . $start_datetime ."'
-        AND T.end_datetime = '" . $end_datetime . "'
-    ) WHERE M.meeting_id = " . $meeting_id;
+        WHERE T.start_datetime = :start_datetime
+        AND T.end_datetime = :end_datetime
+    ) WHERE M.meeting_id = :meeting_id";
   $statement = $db->query($query);
+    
+  $statement->bindValue(':meeting_id', $meeting_id);
+  $statement->bindValue(':start_datetime', $start_datetime);
+  $statement->bindValue(':end_datetime', $end_datetime);
+  $statement->bindValue(':building_name', $building_name);
+  $statement->bindValue(':room_number', $room_number);
+  $statement->execute();
+  
   $statement->closeCursor();
 }
 
 function deleteMeeting($meeting_id) {
     global $db;
-    $query = "DELETE FROM Meeting WHERE Meeting.meeting_id = " . intval($meeting_id);  // since meeting_id is an int I don't think I need quotes around it
-    $statement = $db->query($query);
+    $query = "DELETE FROM Meeting WHERE Meeting.meeting_id = :meeting_id";
+    $statement = $db->prepare($query);
+    $statement->bindValue(':meeting_id', $meeting_id);
+    $statement->execute();
     // we have triggers written upon meeting deletion to also delete the relevant entries from the other tables
     $statement->closeCursor();
 }
@@ -148,19 +161,27 @@ function createMeeting($user, $start_datetime, $end_datetime, $building_name, $r
   global $db;
   // Gets attendee list
   $query = "INSERT INTO Meeting
-    VALUES (" . $next_id . ", '" . $user . "', (
+    VALUES (:nextid, :user, (
       SELECT R.room_id from Room R
-        WHERE R.room_number = " . $room_number . "
+        WHERE R.room_number = :room_number
         AND R.address = (
             SELECT B.address FROM Building B
-            WHERE B.building_name = '" . $building_name . "'
+            WHERE B.building_name = :building_name
         )
     ), M.timeslot_id = (
         SELECT T.timeslot_id from timeslot T
-        WHERE T.start_datetime = '" . $start_datetime ."'
-        AND T.end_datetime = '" . $end_datetime . "'
+        WHERE T.start_datetime = :start_datetime
+        AND T.end_datetime = :end_datetime
     ))";
-  $statement = $db->query($query);
+    
+  $statement = $db->prepare($query);
+  $statement->bindValue(':user', $user);
+  $statement->bindValue(':start_datetime', $start_datetime);
+  $statement->bindValue(':end_datetime', $end_datetime);
+  $statement->bindValue(':building_name', $building_name);
+  $statement->bindValue(':room_number', $room_number);
+  $statement->execute();
+
   $statement->closeCursor();
 }
 
@@ -176,18 +197,23 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
       SELECT * FROM Timeslot_in_Room TR
       WHERE TR.room_id = R.room_id AND TR.timeslot_id = R.timeslot_id
     )
-    AND T.start_datetime < '" . $end_datetime . "'
-    AND T.end_datetime < '" . $start_datetime . "'
+    AND T.start_datetime < :start_datetime
+    AND T.end_datetime < :start_datetime
     AND CAST(T.end_datetime AS TIME) < B.close_time
     AND CAST(T.start_datetime AS TIME) > B.open_time
-    AND '" . $start_datetime . "' < '" . $end_datetime . "'";
+    AND :start_datetime < :end_datetime";
       
   if ($tv_required) { $query .= "AND R.has_tv = TRUE"; }
   if ($whiteboard_required) { $query .= "AND R.has_whiteboard = TRUE"; }
-  if ($capacity != -1) { $query .= "AND R.capacity >= '" . $capacity . "'"; }
-  if ($building_name != "NONE") { $query .= "AND B.building_name = '" . $building_name . "'"; }
+  if ($capacity != -1) { $query .= "AND R.capacity >= :capacity"; }
+  if ($building_name != "NONE") { $query .= "AND B.building_name = :building_name"; }
   
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
+  $statement->bindValue(':start_datetime', $start_datetime);
+  $statement->bindValue(':end_datetime', $end_datetime);
+  $statement->bindValue(':capacity', $capacity);
+  $statement->bindValue(':building_name', $building_name);
+  $statement->execute();
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 

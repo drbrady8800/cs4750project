@@ -3,6 +3,10 @@
   require('../connect-db.php');
   require('../query-funcs.php');
 
+  if ( !isset($_SESSION['computing_id'])) {
+    echo '<script>alert("Please login")</script>';
+    echo '<script>window.location.replace("login.php");</script>';
+  }
 
   // For sorting the meetings
   if (isset($_GET["sort_meetings"]))

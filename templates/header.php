@@ -138,14 +138,17 @@ session_start();
               >
             </li>
           </ul>
-          <a
+          <?php echo (!isset($_SESSION["computing_id"]) ?
+          '<a
             class="btn btn-primary shadow"
             role="button"
             data-bss-disabled-mobile="true"
             data-bss-hover-animate="pulse"
             href="login.php"
             >Log In</a
-          >
+          >'
+          : "Logged in as " . $_SESSION['computing_id']);?>
+
         </div>
       </div>
     </nav>

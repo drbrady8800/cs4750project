@@ -4,6 +4,11 @@ include "header.php";
 require('../query-funcs.php');
 require('../connect-db.php');
 
+if ( !isset($_SESSION['computing_id'])) {
+  echo '<script>alert("Please login")</script>';
+  echo '<script>window.location.replace("login.php");</script>';
+}
+
 $meeting_data;
 if (isset($_GET["meeting_id"]) && !isset($meeting_data))
 {
@@ -11,6 +16,16 @@ if (isset($_GET["meeting_id"]) && !isset($meeting_data))
 }
 
 $buildings = getBuildings();
+
+  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    debug_to_console("HERE");
+  if (!empty($_POST['action']) && $_POST['action'] == 'Submit') {
+    $start_datetime = $_POST['meeting_date'] . $_POST['meeting-time-start'];
+    $end_datetime = $_POST['meeting_date'] . $_POST['meeting-time-end'];
+    $list_of_possible_meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], $_POST['building-name'], $_POST['tv-required'], $_POST['whiteboard-required']);
+    debug_to_console($list_of_possible_meetings);
+  }
+}
 
 ?>
 
@@ -30,6 +45,7 @@ $buildings = getBuildings();
           <div class="col">
             <form
               id="meeting-form"
+              action="edit-meeting.php?"
               method="post"
               style="border-radius: 20px; border: 1px solid var(--bs-blue)"
             >
@@ -109,7 +125,7 @@ $buildings = getBuildings();
                           <input
                             class="form-check-input"
                             type="radio"
-                            name="Group"
+                            name="building-name"
                             id=<?php echo $building["building_name"] ?>
                             <?php echo ($meeting_data['building_name']==$building["building_name"] ? 'checked' : '');?>
                           />
@@ -128,6 +144,7 @@ $buildings = getBuildings();
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-2"
+                  name="tv-required"
                   <?php echo ($meeting_data['tv_required']==1 ? 'checked' : '');?>
                 /><label class="form-check-label" for="formCheck-2"
                   >TV Required?</label
@@ -141,19 +158,19 @@ $buildings = getBuildings();
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-4"
+                  name="whiteboard-required"
                   <?php echo ($meeting_data['whiteboard_required']==1 ? 'checked' : '');?>
                 /><label class="form-check-label" for="formCheck-4"
                   >Whiteboard Required?</label
                 >
               </div>
+              <input
+                class="btn btn-primary float-end"
+                type="submit"
+                style="margin-top: 1rem"
+                value="Submit"
+              />
             </form>
-            <button
-              class="btn btn-primary float-end"
-              type="submit"
-              style="margin-top: 1rem"
-            >
-              Save
-            </button>
           </div>
         </div>
       </div>

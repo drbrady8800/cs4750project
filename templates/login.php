@@ -36,9 +36,9 @@ if(isset($_POST['login_submit'])){
     } else{
          
         //validate password
-        $validaty = password_verify($passwordComparator, $user['password']);
+        $validity = password_verify($passwordComparator, $user['password']);
         
-        if($validaty){
+        if($validity){
             
             //SESSION 
             $_SESSION['computing_id'] = $computing_id;
