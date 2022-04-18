@@ -85,17 +85,14 @@ $buildings = getBuildings();
                 <div class="accordion-item">
                   <h2 class="accordion-header" role="tab">
                     <button
-                      class="accordion-button collapsed"
-                      data-bs-toggle="collapse"
-                      data-bs-target="#building-select .item-1"
-                      aria-expanded="false"
-                      aria-controls="building-select .item-1"
+                      class="accordion-button"
+                      disabled
                     >
                       Select Buildings (optional)
                     </button>
                   </h2>
                   <div
-                    class="accordion-collapse item-1 collapse"
+                    class="accordion-collapse item-1"
                     role="tabpanel"
                     data-bs-parent="#building-select"
                   >
