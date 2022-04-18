@@ -36,7 +36,8 @@ function getBuildings() {
   global $db;
   // Gets attendee list
   $query = "SELECT B.building_name FROM Building B";
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
+  $statement->execute();
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 
@@ -57,7 +58,7 @@ function getUserMeetings($user, $sort_by) {
   if ($sort_by != "NONE") {
     $query .= " ORDER BY " . $sort_by;
   }
-  
+
   $statement = $db->prepare($query);
   $statement->bindValue(':user', $user);
   $statement->execute();
@@ -90,9 +91,11 @@ function getMeetingInfo($meeting_id) {
     JOIN Room R on R.room_id = M.room_id
     JOIN Timeslot T on T.timeslot_id = M.timeslot_id
     JOIN Building B on B.address = R.address
-    WHERE M.meeting_id = '" . $meeting_id . "'";
+    WHERE M.meeting_id = :meeting_id";
 
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
+  $statement->bindValue(':meeting_id', $meeting_id);
+  $statement->execute();
   $raw_data = $statement->fetch();
   $statement->closeCursor();
 
@@ -201,15 +204,22 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
     )
     AND B.open_time < CAST(T.end_datetime AS TIME)
     AND B.close_time > CAST(T.start_datetime AS TIME)
-    AND T.start_datetime < '" . $end_datetime . "'
-    AND T.end_datetime > '" . $start_datetime . "'";
+    AND T.start_datetime < :end_datetime
+    AND T.end_datetime > :start_datetime
+    AND R.capacity >= :capacity";
 
   if ($tv_required) { $query .= " AND R.has_tv = TRUE"; }
   if ($whiteboard_required) { $query .= " AND R.has_whiteboard = TRUE"; }
-  if ($capacity != -1) { $query .= " AND R.capacity >= " . $capacity; }
-  if ($building_name != "NONE") { $query .= " AND B.building_name = '" . $building_name . "'"; }
+  if ($building_name != "NONE") { $query .= " AND B.building_name = :building_name"; }
   
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
+  $statement->bindValue(':start_datetime', $start_datetime);
+  $statement->bindValue(':end_datetime', $end_datetime);
+  $statement->bindValue(':capacity', $capacity);
+  if ($building_name != "NONE") {
+    $statement->bindValue(':building_name', $building_name);
+  }
+  $statement->execute();
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 
