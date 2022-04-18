@@ -203,16 +203,16 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
     AND CAST(T.start_datetime AS TIME) > B.open_time
     AND :start_datetime < :end_datetime";
       
-  if ($tv_required) { $query .= "AND R.has_tv = TRUE"; }
-  if ($whiteboard_required) { $query .= "AND R.has_whiteboard = TRUE"; }
+  if ($tv_required == "on") { $query .= "AND R.has_tv = TRUE"; }
+  if ($whiteboard_required == "on") { $query .= "AND R.has_whiteboard = TRUE"; }
   if ($capacity != -1) { $query .= "AND R.capacity >= :capacity"; }
   if ($building_name != "NONE") { $query .= "AND B.building_name = :building_name"; }
   
   $statement = $db->prepare($query);
   $statement->bindValue(':start_datetime', $start_datetime);
   $statement->bindValue(':end_datetime', $end_datetime);
-  $statement->bindValue(':capacity', $capacity);
-  $statement->bindValue(':building_name', $building_name);
+  if ($capacity != -1) { $statement->bindValue(':capacity', $capacity); }
+  if ($building_name != "NONE") { $statement->bindValue(':building_name', $building_name); }
   $statement->execute();
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
