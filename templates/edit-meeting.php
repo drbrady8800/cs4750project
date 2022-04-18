@@ -1,4 +1,4 @@
-
+git
 <?php
 include "header.php";
 require('../query-funcs.php');
@@ -17,56 +17,84 @@ if (isset($_GET["meeting_id"]) && !isset($meeting_data))
 }
 
 $buildings = getBuildings();
+$meetings;
+$table = "";
 
-  if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    debug_to_console("HERE");
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   if (!empty($_POST['action']) && $_POST['action'] == 'Submit') {
     $start_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-start'];
     $end_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-end'];
-    $list_of_possible_meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], $_POST['building-name'], $_POST['tv-required'], $_POST['whiteboard-required']);
-    debug_to_console($list_of_possible_meetings);
+    $whiteboard_required = isset($_POST['whiteboard-required']);
+    $tv_required = isset($_POST['tv-required']);
+    $meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], "NONE", $tv_required, $whiteboard_required);
+    $table = generateMeetingOptions($meetings);
   }
 }
 
-function generateMeetingOptions($meeting_data) {
-  $meetings = getValidPossibleMeetings($meeting_data['start_datetime'], $meeting_data['end_datetime'], $meeting_data['capacity'], $meeting_data['building_name'], $meeting_data['tv_required'], $meeting_data['whiteboard_required']);
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+  if (!empty($_POST['selected'])) {
+    $start_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-start'];
+    $end_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-end'];
+    $whiteboard_required = isset($_POST['whiteboard-required']);
+    $tv_required = isset($_POST['tv-required']);
+    $meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], "NONE", $tv_required, $whiteboard_required);
+    $table = generateMeetingOptions($meetings);
+  }
+}
+
+function generateMeetingOptions($meetings) {
   // call getUserMeetings($user) to get array with all meeting data
-  $table_body = "";
-  //date_default_timezone_set('');
+  $to_return = "";
 
   foreach($meetings as $meeting) {
       $start = $meeting['start_datetime'];
       $end = $meeting['end_datetime'];
       $place = $meeting['building_room'];
-      $attendees = $meeting['attendees'];
+      $cap = $meeting['capacity'];
       $meeting_id = $meeting['meeting_id'];
       $row = '
-          <tr id=' . "$meeting_id" . '>
-              <td class="text-truncate" style="max-width: 200px">' . "$start" . '</td>
-              <td class="text-truncate" style="max-width: 200px">' . "$end" . '</td>
-              <td class="text-truncate" style="max-width: 200px">' . "$place" . '</td>
-              <td class="text-truncate" style="max-width: 200px">' . "$attendees" . '</td>
+          <tr>
+              <form method="POST">
+              <td class="text-truncate" style="max-width: 200px">
+                <input name="start-datetime-sel" value = ' . "$start" . ' readonly>
+                  ' . "$start" . '
+                </input>
+              </td>
+              <td class="text-truncate" style="max-width: 200px">
+                <input name="start-datetime-sel" value = ' . "$end" . ' readonly>
+                ' . "$end" . '
+                </input>
+              </td>
+              <td class="text-truncate" style="max-width: 200px">
+                <input name="start-datetime-sel" value = ' . "$place" . ' readonly>
+                ' . "$place" . '
+                </input>
+              </td>
+              <td class="text-truncate" style="max-width: 200px">
+                <input name="start-datetime-sel" value = ' . "$cap" . ' readonly>
+                ' . "$cap" . '
+                </input>
+              </td>
               <td class="text-center text-center">
               <div class="btn-group btn-group-sm d-flex float-end flex-row flex-nowrap justify-content-lg-end align-items-lg-center" role="group" style="border-style: none">
               
-            <form method="POST" action="">
-            <button class="btn btn-primary" type="submit" name="selected" value=' .  "$meeting_id" . ' 
+            <input class="btn btn-primary" type="submit" name="selected" value="select" 
                     style="
-                        background: var(--bs-table-bg);
+                        background: green;
                         border-style: none;
                         padding: 0.25rem;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16">
                         <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
                         <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
                       </svg>
-            </button>
+            </input>
             </form>
               </div>
           </td>
           </tr>';
-      $table_body .= $row;
+      $to_return .= $row;
   }
-  return($table_body);
+  return($to_return);
 }
 
 
@@ -78,8 +106,8 @@ function generateMeetingOptions($meeting_data) {
       <div class="container py-5">
         <div class="row mb-5">
           <div class="col-md-8 col-xl-6 text-center mx-auto">
-            <h2 class="fw-bold">Create A New Meeting</h2>
-            <p class="text-muted w-lg-50">PLACEHOLDER PARAGRAPH</p>
+            <h2 class="fw-bold">Edit A Meeting</h2>
+            <p class="text-muted w-lg-50">Fill in data to edit a meeting</p>
           </div>
         </div>
         <div
@@ -165,7 +193,7 @@ function generateMeetingOptions($meeting_data) {
                             class="form-check-input"
                             type="radio"
                             name="building-name"
-                            id=<?php echo $building["building_name"] ?>
+                            value=<?php echo $building["building_name"] ?>
                             <?php echo ($meeting_data['building_name']==$building["building_name"] ? 'checked' : '');?>
                           />
                           <label class="form-check-label" for="flexRadioDefault2"><?php echo $building["building_name"] ?></label>
@@ -213,7 +241,8 @@ function generateMeetingOptions($meeting_data) {
             </form>
           </div>
         </div>
-        <div class="card-body">
+
+      <div class="card-body">
                     <div class="table-responsive text-start">
                       <table class="table table-striped table-hover">
                         <thead>
@@ -221,20 +250,24 @@ function generateMeetingOptions($meeting_data) {
                             <th>Start</th>
                             <th>End</th>
                             <th>Room</th>
-                            <th>Participants</th>
+                            <th>Capacity</th>
                             <th class="text-center">Select</th>
                           </tr>
                         </thead>
                         <tbody>
                           <!-- Begin Meeting Row Generation -->
                           <?php
-                            
+                            if (isset($table)) {
+
+                              echo $table;
+                            }
                           ?>
                           <!-- End Meeting Row Generation -->
                         </tbody>
                       </table>
                     </div>
                   </div>
+      
       
 </section>
       

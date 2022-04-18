@@ -10,16 +10,15 @@
     echo '<script>window.location.replace("login.php");</script>';
   }
 
-  debug_to_console("YO");
   if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    debug_to_console("HERE");
-    if (!empty($_POST['action']) && $_POST['action'] == 'Submit') {
-      $start_datetime = $_POST['meeting_date'] . $_POST['meeting-time-start'];
-      $end_datetime = $_POST['meeting_date'] . $_POST['meeting-time-end'];
-      $list_of_possible_meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], $_POST['building-name'], $_POST['tv-required'], $_POST['whiteboard-required']);
-      debug_to_console($list_of_possible_meetings);
-    }
+  if (!empty($_POST['action']) && $_POST['action'] == 'Submit') {
+    $start_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-start'];
+    $end_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-end'];
+    $whiteboard_required = isset($_POST['whiteboard-required']);
+    $tv_required = isset($_POST['tv-required']);
+    $list_of_possible_meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], "NONE", $tv_required, $whiteboard_required);
   }
+}
 ?>
 
 <!-- Begin Create Meeting -->
@@ -29,7 +28,7 @@
         <div class="row mb-5">
           <div class="col-md-8 col-xl-6 text-center mx-auto">
             <h2 class="fw-bold">Create A New Meeting</h2>
-            <p class="text-muted w-lg-50">PLACEHOLDER PARAGRAPH</p>
+            <p class="text-muted w-lg-50">Fill in data to create a new meeting</p>
           </div>
         </div>
         <div

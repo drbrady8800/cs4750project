@@ -1,9 +1,9 @@
 <?php
 function debug_to_console($data) {
     $output = $data;
-    // if (is_array($output)) {
-    //     $output = var_dump($data);
-    // }
+    if (is_array($output)) {
+        $output = var_dump($data);
+    }
 
     echo `<script>console.log('Debug Objects: ` . $output . `' );</script>`;
 }
@@ -193,27 +193,16 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
     JOIN Room R on R.room_id = M.room_id
     JOIN Timeslot T on T.timeslot_id = M.timeslot_id
     JOIN Building B on B.address = R.address
-    WHERE NOT EXISTS (
-      SELECT * FROM Timeslot_in_Room TR
-      WHERE TR.room_id = R.room_id AND TR.timeslot_id = R.timeslot_id
-    )
-    AND T.start_datetime < :start_datetime
-    AND T.end_datetime < :start_datetime
-    AND CAST(T.end_datetime AS TIME) < B.close_time
-    AND CAST(T.start_datetime AS TIME) > B.open_time
-    AND :start_datetime < :end_datetime";
+    AND T.start_datetime < '" . $end_datetime . "'
+    AND T.end_datetime < '" . $start_datetime . "'
+    AND '" . $start_datetime . "' < '" . $end_datetime . "'";
       
-  if ($tv_required == "on") { $query .= "AND R.has_tv = TRUE"; }
-  if ($whiteboard_required == "on") { $query .= "AND R.has_whiteboard = TRUE"; }
-  if ($capacity != -1) { $query .= "AND R.capacity >= :capacity"; }
-  if ($building_name != "NONE") { $query .= "AND B.building_name = :building_name"; }
+  if ($tv_required) { $query .= " AND R.has_tv = TRUE"; }
+  if ($whiteboard_required) { $query .= " AND R.has_whiteboard = TRUE"; }
+  if ($capacity != -1) { $query .= " AND R.capacity >= " . $capacity; }
+  if ($building_name != "NONE") { $query .= " AND B.building_name = '" . $building_name . "'"; }
   
-  $statement = $db->prepare($query);
-  $statement->bindValue(':start_datetime', $start_datetime);
-  $statement->bindValue(':end_datetime', $end_datetime);
-  if ($capacity != -1) { $statement->bindValue(':capacity', $capacity); }
-  if ($building_name != "NONE") { $statement->bindValue(':building_name', $building_name); }
-  $statement->execute();
+  $statement = $db->query($query);
   $raw_data = $statement->fetchall();
   $statement->closeCursor();
 
@@ -222,8 +211,9 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
   foreach($raw_data as $meeting) {
     $attendees = getMeetingAttendees($meeting["meeting_id"]);
     $to_add = array(
-      "start_time" => $meeting["start_datetime"],
-      "end_time" => $meeting["end_datetime"],
+      "meeting_id" => $meeting["meeting_id"],
+      "start_datetime" => $meeting["start_datetime"],
+      "end_datetime" => $meeting["end_datetime"],
       "building_room" => $meeting["building_name"] . " - " . $meeting["room_number"],
       "has_tv" => $meeting["has_tv"],
       "has_whiteboard" => $meeting["has_whiteboard"],

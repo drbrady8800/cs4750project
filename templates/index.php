@@ -26,8 +26,8 @@ include "header.php";
                 src="../assets/img/rotunda_dusk_spring17_ss_05_header.jpg"
               />
               <div class="card-img-overlay">
-                <h4 style="color: var(--bs-body-bg)">PLACEHOLDER HEADER</h4>
-                <p style="color: var(--bs-light)">PLACEHOLDER PARAGRAPH</p>
+                <h4 style="color: var(--bs-body-bg)"></h4>
+                <p style="color: var(--bs-light)"></p>
               </div>
             </div>
           </div>
