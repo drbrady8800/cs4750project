@@ -26,20 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $end_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-end'];
     $whiteboard_required = isset($_POST['whiteboard-required']);
     $tv_required = isset($_POST['tv-required']);
-    $meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], "NONE", $tv_required, $whiteboard_required);
+    $building_name = "NONE";
+    if (isset($_POST['building-name'])) {
+      $building_name = $_POST['building-name'];
+    }
+    $meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], $building_name, $tv_required, $whiteboard_required);
     $table = generateMeetingOptions($meetings);
   }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   if (!empty($_POST['selected'])) {
-    debug_to_console($meetings);
-    $meeting_id_selected = $_POST['meeting_id_value'];
-    $start_datetime = $meetings[$meeting_id_selected]["start_datetime"];
-    $end_datetime = $meetings[$meeting_id_selected]["end_datetime"];
-    $building_name = explode(" - ", $meetings[$meeting_id_selected]["building_room"])[0];
-    $room_number = explode(" - ", $meetings[$meeting_id_selected]["building_room"])[1];
-    createMeeting($meeting_id_selected, $start_datetime, $end_datetime, $building_name, $room_number);
+    $selected_meeting_info = explode(", ", $_POST['meeting_info_pot']);
+    $start_datetime = $selected_meeting_info[0];
+    $end_datetime = $selected_meeting_info[1];
+    $building_name = explode(" - ", $selected_meeting_info[2])[0];
+    $room_number = explode(" - ", $selected_meeting_info[2])[1];
+    editMeeting($_GET["meeting_id"], $start_datetime, $end_datetime, $building_name, $room_number);
+    echo '<script>window.location.replace("meeting.php");</script>';
   }
 }
 
@@ -52,7 +56,6 @@ function generateMeetingOptions($meetings) {
       $end = $meeting['end_datetime'];
       $place = $meeting['building_room'];
       $cap = $meeting['capacity'];
-      $meeting_id = $meeting['meeting_id'];
       $row = '
           <tr>
               <form method="POST">
@@ -70,7 +73,7 @@ function generateMeetingOptions($meetings) {
               </td>
               <td class="text-center text-center">
               <div class="btn-group btn-group-sm d-flex float-end flex-row flex-nowrap justify-content-lg-end align-items-lg-center" role="group" style="border-style: none">
-              <input type="hidden" name="meeting_id_value" value = ' . "$meeting_id" . '></input>
+              <input type="hidden" name="meeting_info_pot" value = "' . $start . ", " . $end . ", " . $place . ", " . $cap .'"></input>
             <input class="btn btn-primary" type="submit" name="selected" value="Select" 
                     style="
                         background: green;
@@ -182,7 +185,7 @@ function generateMeetingOptions($meetings) {
                             class="form-check-input"
                             type="radio"
                             name="building-name"
-                            value=<?php echo $building["building_name"] ?>
+                            value="<?php echo $building["building_name"] ?>"
                             <?php echo ($meeting_data['building_name']==$building["building_name"] ? 'checked' : '');?>
                           />
                           <label class="form-check-label" for="flexRadioDefault2"><?php echo $building["building_name"] ?></label>

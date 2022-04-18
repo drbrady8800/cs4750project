@@ -55,13 +55,11 @@ function getUserMeetings($user, $sort_by) {
     JOIN Building B on B.address = R.address
     WHERE M.owner_computing_id = :user";
   if ($sort_by != "NONE") {
-    $query .= "ORDER BY :sort_by";
+    $query .= " ORDER BY " . $sort_by;
   }
+  
   $statement = $db->prepare($query);
   $statement->bindValue(':user', $user);
-  if ($sort_by != "NONE") {
-    $statement->bindValue(':sort_by', $sort_by);
-  }
   $statement->execute();
 
   $raw_data = $statement->fetchall();
@@ -128,11 +126,11 @@ function editMeeting($meeting_id, $start_datetime, $end_datetime, $building_name
             WHERE B.building_name = :building_name
         )
     ), M.timeslot_id = (
-        SELECT T.timeslot_id from timeslot T
+        SELECT T.timeslot_id from Timeslot T
         WHERE T.start_datetime = :start_datetime
         AND T.end_datetime = :end_datetime
     ) WHERE M.meeting_id = :meeting_id";
-  $statement = $db->query($query);
+  $statement = $db->prepare($query);
     
   $statement->bindValue(':meeting_id', $meeting_id);
   $statement->bindValue(':start_datetime', $start_datetime);
@@ -156,12 +154,15 @@ function deleteMeeting($meeting_id) {
 
 function createMeeting($user, $start_datetime, $end_datetime, $building_name, $room_number) {
   // get the next id to use
+  global $db;
   $id_query = "SELECT MAX(M.meeting_id) FROM Meeting M";
-  $id_statement = $db->query($query);
-  $next_id = $db->fetch() + 1;
+  $id_statement = $db->prepare($id_query);
+  $id_statement->execute();
+  $next_id = intval($id_statement->fetch()[0]) + 1;
   $id_statement->closeCursor();
   
-  global $db;
+
+
   // Gets attendee list
   $query = "INSERT INTO Meeting
     VALUES (:nextid, :user, (
@@ -171,13 +172,14 @@ function createMeeting($user, $start_datetime, $end_datetime, $building_name, $r
             SELECT B.address FROM Building B
             WHERE B.building_name = :building_name
         )
-    ), M.timeslot_id = (
-        SELECT T.timeslot_id from timeslot T
+    ), (
+        SELECT T.timeslot_id from Timeslot T
         WHERE T.start_datetime = :start_datetime
         AND T.end_datetime = :end_datetime
     ))";
     
   $statement = $db->prepare($query);
+  $statement->bindValue(':nextid', $next_id);
   $statement->bindValue(':user', $user);
   $statement->bindValue(':start_datetime', $start_datetime);
   $statement->bindValue(':end_datetime', $end_datetime);
@@ -191,15 +193,17 @@ function createMeeting($user, $start_datetime, $end_datetime, $building_name, $r
 function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $building_name, $tv_required, $whiteboard_required) {
   // Bear with me here, writing a SQL query for this is going to take a bit
   global $db;
-  $query = "SELECT M.meeting_id, T.start_datetime, T.end_datetime, B.building_name, R.room_number, R.has_whiteboard, R.has_tv, R.capacity
-    FROM Meeting M
-    JOIN Room R on R.room_id = M.room_id
-    JOIN Timeslot T on T.timeslot_id = M.timeslot_id
-    JOIN Building B on B.address = R.address
+  $query = "SELECT T.start_datetime, T.end_datetime, B.building_name, R.room_number, R.capacity FROM Room R
+    JOIN Building B on R.address = B.address
+    CROSS JOIN Timeslot T
+    WHERE CAST(T.timeslot_id AS CHAR)|' '|CAST(R.room_id AS CHAR) NOT IN (SELECT
+        CAST(M.timeslot_id AS CHAR)|' '|CAST(M.room_id AS CHAR) FROM Meeting M
+    )
+    AND B.open_time < CAST(T.end_datetime AS TIME)
+    AND B.close_time > CAST(T.start_datetime AS TIME)
     AND T.start_datetime < '" . $end_datetime . "'
-    AND T.end_datetime < '" . $start_datetime . "'
-    AND '" . $start_datetime . "' < '" . $end_datetime . "'";
-      
+    AND T.end_datetime > '" . $start_datetime . "'";
+
   if ($tv_required) { $query .= " AND R.has_tv = TRUE"; }
   if ($whiteboard_required) { $query .= " AND R.has_whiteboard = TRUE"; }
   if ($capacity != -1) { $query .= " AND R.capacity >= " . $capacity; }
@@ -211,18 +215,14 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
 
   // Return formatting
   $to_return = array();
-  foreach($raw_data as $meeting) {
-    $attendees = getMeetingAttendees($meeting["meeting_id"]);
+  foreach($raw_data as $key=>$meeting) {
     $to_add = array(
-      "meeting_id" => $meeting["meeting_id"],
       "start_datetime" => $meeting["start_datetime"],
       "end_datetime" => $meeting["end_datetime"],
       "building_room" => $meeting["building_name"] . " - " . $meeting["room_number"],
-      "has_tv" => $meeting["has_tv"],
-      "has_whiteboard" => $meeting["has_whiteboard"],
       "capacity" => $meeting["capacity"]
     );
-    $to_return[$meeting["meeting_id"]] = $to_add;
+    $to_return[$key] = $to_add;
   }
 
   return($to_return);
