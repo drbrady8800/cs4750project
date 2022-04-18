@@ -17,7 +17,7 @@ if (isset($_GET["meeting_id"]) && !isset($meeting_data))
 }
 
 $buildings = getBuildings();
-$meetings;
+$meetings = "";
 $table = "";
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -33,12 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
   if (!empty($_POST['selected'])) {
-    $start_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-start'];
-    $end_datetime = $_POST['meeting-date'] . " " . $_POST['meeting-time-end'];
-    $whiteboard_required = isset($_POST['whiteboard-required']);
-    $tv_required = isset($_POST['tv-required']);
-    $meetings = getValidPossibleMeetings($start_datetime, $end_datetime, $_POST['attending-number'], "NONE", $tv_required, $whiteboard_required);
-    $table = generateMeetingOptions($meetings);
+    debug_to_console($meetings);
+    $meeting_id_selected = $_POST['meeting_id_value'];
+    $start_datetime = $meetings[$meeting_id_selected]["start_datetime"];
+    $end_datetime = $meetings[$meeting_id_selected]["end_datetime"];
+    $building_name = explode(" - ", $meetings[$meeting_id_selected]["building_room"])[0];
+    $room_number = explode(" - ", $meetings[$meeting_id_selected]["building_room"])[1];
+    createMeeting($meeting_id_selected, $start_datetime, $end_datetime, $building_name, $room_number);
   }
 }
 
@@ -56,37 +57,25 @@ function generateMeetingOptions($meetings) {
           <tr>
               <form method="POST">
               <td class="text-truncate" style="max-width: 200px">
-                <input name="start-datetime-sel" value = ' . "$start" . ' readonly>
                   ' . "$start" . '
-                </input>
               </td>
               <td class="text-truncate" style="max-width: 200px">
-                <input name="start-datetime-sel" value = ' . "$end" . ' readonly>
                 ' . "$end" . '
-                </input>
               </td>
               <td class="text-truncate" style="max-width: 200px">
-                <input name="start-datetime-sel" value = ' . "$place" . ' readonly>
                 ' . "$place" . '
-                </input>
               </td>
               <td class="text-truncate" style="max-width: 200px">
-                <input name="start-datetime-sel" value = ' . "$cap" . ' readonly>
                 ' . "$cap" . '
-                </input>
               </td>
               <td class="text-center text-center">
               <div class="btn-group btn-group-sm d-flex float-end flex-row flex-nowrap justify-content-lg-end align-items-lg-center" role="group" style="border-style: none">
-              
-            <input class="btn btn-primary" type="submit" name="selected" value="select" 
+              <input type="hidden" name="meeting_id_value" value = ' . "$meeting_id" . '></input>
+            <input class="btn btn-primary" type="submit" name="selected" value="Select" 
                     style="
                         background: green;
                         border-style: none;
                         padding: 0.25rem;">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16">
-                        <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
-                        <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
-                      </svg>
             </input>
             </form>
               </div>

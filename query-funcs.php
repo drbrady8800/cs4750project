@@ -55,10 +55,13 @@ function getUserMeetings($user, $sort_by) {
     JOIN Building B on B.address = R.address
     WHERE M.owner_computing_id = :user";
   if ($sort_by != "NONE") {
-    $query .= "ORDER BY " . $sort_by;
+    $query .= "ORDER BY :sort_by";
   }
   $statement = $db->prepare($query);
   $statement->bindValue(':user', $user);
+  if ($sort_by != "NONE") {
+    $statement->bindValue(':sort_by', $sort_by);
+  }
   $statement->execute();
 
   $raw_data = $statement->fetchall();
