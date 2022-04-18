@@ -160,8 +160,10 @@
           </div>
         </div>
       </div>
-    </section>
-    <div class="card-body">
+      <div
+          class="row row-cols-1 row-cols-md-2 justify-content-center mx-auto"
+        >
+      <div class="card-body">
                     <div class="table-responsive text-start">
                       <table class="table table-striped table-hover">
                         <thead>
@@ -170,22 +172,22 @@
                             <th>End</th>
                             <th>Room</th>
                             <th>Participants</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center">Select</th>
                           </tr>
                         </thead>
                         <tbody>
                           <!-- Begin Meeting Row Generation -->
                           <?php
-                            if (isset($meeting_data) )
-                            {
-                              echo generateMeetingOptions($meeting_data);
-                            }
+                            
                           ?>
                           <!-- End Meeting Row Generation -->
                         </tbody>
                       </table>
                     </div>
                   </div>
+      </div>
+    </section>
+
     <!-- end create meeting -->
 
 <?php

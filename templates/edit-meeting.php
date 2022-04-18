@@ -40,7 +40,6 @@ function generateMeetingOptions($meeting_data) {
       $place = $meeting['building_room'];
       $attendees = $meeting['attendees'];
       $meeting_id = $meeting['meeting_id'];
-      $meeting_info = 
       $row = '
           <tr id=' . "$meeting_id" . '>
               <td class="text-truncate" style="max-width: 200px">' . "$start" . '</td>
@@ -50,41 +49,16 @@ function generateMeetingOptions($meeting_data) {
               <td class="text-center text-center">
               <div class="btn-group btn-group-sm d-flex float-end flex-row flex-nowrap justify-content-lg-end align-items-lg-center" role="group" style="border-style: none">
               
-              <a class="btn" name="edit" href="edit-meeting.php?meeting_id=' . "$meeting_id" . '"
-                  style="
-                      background: var(--bs-table-bg);
-                      border-style: none;
-                      padding: 0.25rem;">
-                  <svg
-                  class="bi bi-pencil-fill fs-5"
-                  xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                style="
-                  color: var(--bs-table-striped-color);
-                  margin-left: 11px;">
-                <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"></path>
-              </svg></a
-            >
             <form method="POST" action="">
-            <button class="btn btn-primary" type="submit" name="delete" value=' .  "$meeting_id" . '
+            <button class="btn btn-primary" type="submit" name="selected" value=' .  "$meeting_id" . ' 
                     style="
                         background: var(--bs-table-bg);
                         border-style: none;
                         padding: 0.25rem;">
-              <svg
-                class="bi bi-trash-fill fs-5"
-                xmlns="http://www.w3.org/2000/svg"
-                width="1em"
-                height="1em"
-                fill="currentColor"
-                viewBox="0 0 16 16"
-                style="color: var(--bs-danger);
-                margin-left: 11px;">
-                <path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"></path>
-              </svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-check2-circle" viewBox="0 0 16 16">
+                        <path d="M2.5 8a5.5 5.5 0 0 1 8.25-4.764.5.5 0 0 0 .5-.866A6.5 6.5 0 1 0 14.5 8a.5.5 0 0 0-1 0 5.5 5.5 0 1 1-11 0z"/>
+                        <path d="M15.354 3.354a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0l7-7z"/>
+                      </svg>
             </button>
             </form>
               </div>
@@ -239,126 +213,28 @@ function generateMeetingOptions($meeting_data) {
             </form>
           </div>
         </div>
-        <div
-          class="row  justify-content-center mx-auto"
-        >
-          <div class="col">
-          <div class="card-body">
+        <div class="card-body">
                     <div class="table-responsive text-start">
                       <table class="table table-striped table-hover">
                         <thead>
                           <tr>
-                            <th>Date</th>
-                            <th>Time</th>
+                            <th>Start</th>
+                            <th>End</th>
                             <th>Room</th>
                             <th>Participants</th>
-                            <th class="text-center">Actions</th>
+                            <th class="text-center">Select</th>
                           </tr>
                         </thead>
                         <tbody>
-                          <tr>
-                            <td class="text-truncate" style="max-width: 200px">
-                              04/16/22
-                            </td>
-                            <td class="text-truncate" style="max-width: 200px">
-                              12:00pm
-                            </td>
-                            <td class="text-truncate" style="max-width: 200px">
-                              Building - Room #
-                            </td>
-                            <td>Alice, Bob</td>
-                            <td class="text-center text-center">
-                              <div
-                                class="btn-group btn-group-sm d-flex float-end flex-row flex-nowrap justify-content-lg-end align-items-lg-center"
-                                role="group"
-                                style="border-style: none"
-                              >
-                                <button
-                                  class="btn btn-primary"
-                                  type="button"
-                                  style="
-                                    background: var(--bs-table-bg);
-                                    border-style: none;
-                                    padding: 0.25rem;
-                                  "
-                                >
-                                  <svg
-                                    class="bi bi-pencil-fill fs-5"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="1em"
-                                    height="1em"
-                                    fill="currentColor"
-                                    viewBox="0 0 16 16"
-                                    style="
-                                      color: var(--bs-table-striped-color);
-                                      margin-left: 11px;
-                                    "
-                                  >
-                                    <path
-                                      d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"
-                                    ></path>
-                                  </svg></button
-                                ><button
-                                  class="btn btn-primary"
-                                  type="button"
-                                  style="
-                                    background: var(--bs-table-bg);
-                                    border-style: none;
-                                    padding: 0.25rem;
-                                  "
-                                >
-                                  <svg
-                                    class="bi bi-eye-fill fs-5 fs-5 text-primary"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="1em"
-                                    height="1em"
-                                    fill="currentColor"
-                                    viewBox="0 0 16 16"
-                                    style="margin-left: 11px"
-                                  >
-                                    <path
-                                      d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"
-                                    ></path>
-                                    <path
-                                      d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"
-                                    ></path>
-                                  </svg></button
-                                ><button
-                                  class="btn btn-primary"
-                                  type="button"
-                                  style="
-                                    background: var(--bs-table-bg);
-                                    border-style: none;
-                                    padding: 0.25rem;
-                                  "
-                                >
-                                  <svg
-                                    class="bi bi-trash-fill fs-5"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="1em"
-                                    height="1em"
-                                    fill="currentColor"
-                                    viewBox="0 0 16 16"
-                                    style="
-                                      color: var(--bs-danger);
-                                      margin-left: 11px;
-                                    "
-                                  >
-                                    <path
-                                      d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1H2.5zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5zM8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5zm3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0z"
-                                    ></path>
-                                  </svg>
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                          <!-- Begin Meeting Row Generation -->
+                          <?php
+                            
+                          ?>
+                          <!-- End Meeting Row Generation -->
                         </tbody>
                       </table>
                     </div>
                   </div>
-                  <div class="card-footer"></div>
-                  <div class="row mb-5"></div>
-      </div>
       
 </section>
       
