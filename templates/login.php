@@ -41,13 +41,13 @@ if(isset($_POST['login_submit'])){
         if($validaty){
             
             //SESSION 
-            $_SESSION['admin'] = $computing_id;
+            $_SESSION['computing_id'] = $computing_id;
             $_SESSION['valid'] = true;
             $_SESSION['timeout'] = time();
 
             //location of next page
-            echo '<script>alert("Successfully Logged In")</script>';
-            echo '<script>window.location.replace("");</script>';
+            //echo '<script>alert("Successfully Logged In")</script>';
+            echo '<script>window.location.replace("index.php");</script>';
             exit;
             
         } else{
@@ -92,7 +92,7 @@ elseif(isset($_POST['signup_submit'])){
           $stmt->execute();
           echo '<script>alert("New account successfully created")</script>';
           //redirect to login
-          echo '<script>window.location.replace("index.php")</script>';
+          echo '<script>window.location.replace("login.php")</script>';
         } catch (Exception $e)       // handle any type of exception
         {
            $error_message = $e->getMessage();

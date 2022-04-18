@@ -1,40 +1,113 @@
 <?php
 function debug_to_console($data) {
     $output = $data;
-    if (is_array($output))
-        $output = implode(',', $output);
+    if (is_array($output)) {
+        $output = var_dump($data);
+    }
 
-    echo "<script>console.log('Debug Objects: " . $output . "' );</script>";
-}
-
-function getUserMeetings() {
-  // Get user's computing id
-  $user;
-  global $db;
-  // Gets all info except for list of attendees, that is a seperate query
-  $query = "SELECT M.meeting_id, T.start_datetime, B.building_name, R.room_number
-    FROM Meeting M
-    JOIN Room R on R.room_id = M.room_id
-    JOIN Timeslot T on T.timeslot_id = M.timeslot_id
-    JOIN Building B on B.address = R.address
-    WHERE M.owner_computing_id = '" . $user . "'";
-  $statement = $db->query($query);
-  $statement->closeCursor();
+    echo `<script>console.log('Debug Objects: ` . $output . `' );</script>`;
 }
 
 function getMeetingAttendees($meeting_id) {
   global $db;
   // Gets attendee list
-  $query = "SELECT U.first_name FROM meeting M
+  $query = "SELECT U.first_name FROM Meeting M
     JOIN User U on U.computing_id = M.owner_computing_id
     WHERE M.meeting_id = " . $meeting_id . "
     UNION
-    SELECT U.first_name FROM meeting_attendee MA
+    SELECT U.first_name FROM Meeting_Attendee MA
     JOIN User U on U.computing_id = MA.attendee_computing_id
     WHERE MA.meeting_id = " . $meeting_id;
   $statement = $db->query($query);
+  $raw_data = $statement->fetchall();
   $statement->closeCursor();
+
+  $to_return = "";
+  foreach ($raw_data as $name) {
+    $to_return .= $name["first_name"] . ", ";
+  }
+
+  return($to_return);
 }
+
+function getBuildings() {
+  global $db;
+  // Gets attendee list
+  $query = "SELECT B.building_name FROM Building B";
+  $statement = $db->query($query);
+  $raw_data = $statement->fetchall();
+  $statement->closeCursor();
+
+  return($raw_data);
+}
+
+function getUserMeetings($user, $sort_by) {
+  // Get user's computing id
+  
+  global $db;
+  // Gets all info except for list of attendees, that is a seperate query
+  $query = "SELECT M.meeting_id, T.start_datetime, T.end_datetime, B.building_name, R.room_number
+    FROM Meeting M
+    JOIN Room R on R.room_id = M.room_id
+    JOIN Timeslot T on T.timeslot_id = M.timeslot_id
+    JOIN Building B on B.address = R.address
+    WHERE M.owner_computing_id = '" . $user . "'";
+  if ($sort_by != "NONE") {
+    $query .= "ORDER BY " . $sort_by;
+  }
+  $statement = $db->query($query);
+  $raw_data = $statement->fetchall();
+  $statement->closeCursor();
+
+  // Return formatting
+  $to_return = array();
+  foreach($raw_data as $meeting) {
+    $attendees = getMeetingAttendees($meeting["meeting_id"]);
+    $to_add = array(
+      "meeting_id" => $meeting["meeting_id"],
+      "start_datetime" => $meeting["start_datetime"],
+      "end_datetime" => $meeting["end_datetime"],
+      "building_room" => $meeting["building_name"] . " - " . $meeting["room_number"],
+      "attendees" => $attendees
+    );
+    $to_return[$meeting["meeting_id"]] = $to_add;
+  }
+
+  return($to_return);
+}
+
+function getMeetingInfo($meeting_id) {  
+  global $db;
+  // Gets all info except for list of attendees, that is a seperate query
+  $query = "SELECT M.meeting_id, T.start_datetime, T.end_datetime, B.building_name, R.room_number, R.has_tv, R.has_whiteboard
+    FROM Meeting M
+    JOIN Room R on R.room_id = M.room_id
+    JOIN Timeslot T on T.timeslot_id = M.timeslot_id
+    JOIN Building B on B.address = R.address
+    WHERE M.meeting_id = '" . $meeting_id . "'";
+
+  debug_to_console($query);
+
+  $statement = $db->query($query);
+  $raw_data = $statement->fetch();
+  $statement->closeCursor();
+
+  // Return formatting
+  $attendees = getMeetingAttendees($raw_data["meeting_id"]);
+  $to_return = array(
+    "meeting_id" => $raw_data["meeting_id"],
+    "date" => explode(" " , $raw_data["start_datetime"])[0],
+    "start_time" => explode(" " , $raw_data["start_datetime"])[1],
+    "end_time" => explode(" " , $raw_data["end_datetime"])[1],
+    "building_name" => $raw_data["building_name"],
+    "tv_required" => $raw_data["has_tv"],
+    "whiteboard_required" => $raw_data["has_whiteboard"],
+    "attendees" => $attendees
+  );
+
+  return($to_return);
+}
+
 
 // TO DO AFTER CREATE QUERY / MODAL
 function editMeeting($meeting_id, $start_datetime, $end_datetime, $building_name, $room_number) {
@@ -59,35 +132,19 @@ function editMeeting($meeting_id, $start_datetime, $end_datetime, $building_name
 
 function deleteMeeting($meeting_id) {
     global $db;
-    $query = "DELETE FROM Meeting WHERE Meeting.meeting_id = " . $meeting_id;  // since meeting_id is an int I don't think I need quotes around it
+    $query = "DELETE FROM Meeting WHERE Meeting.meeting_id = " . intval($meeting_id);  // since meeting_id is an int I don't think I need quotes around it
     $statement = $db->query($query);
     // we have triggers written upon meeting deletion to also delete the relevant entries from the other tables
     $statement->closeCursor();
 }
 
-// sort_metric should be one of capacity, room_number (maybe), Building.open_time, Building.close_time
-// descending should be a boolean: True for descending
-function sortMeeting($sort_metric, $descending) {
-    global $db;
-    $query = " SELECT room_id, capacity, room_number, has_tv, has_whiteboard,
-    Building.address, Building.building_name, Building.open_time, Building.close_time
-    FROM Room JOIN Building
-        ON Room.address = Building.address
-    ORDER BY '" . $sort_metric . "'";
-    if ($descending) { $query .= " DESC"; }
-    
-    $statement = $db->query($query);
-    $statement->closeCursor();
-}
-
-function createMeeting($start_datetime, $end_datetime, $building_name, $room_number) {
+function createMeeting($user, $start_datetime, $end_datetime, $building_name, $room_number) {
   // get the next id to use
   $id_query = "SELECT MAX(M.meeting_id) FROM Meeting M";
   $id_statement = $db->query($query);
   $next_id = $db->fetch() + 1;
   $id_statement->closeCursor();
   
-  $user;
   global $db;
   // Gets attendee list
   $query = "INSERT INTO Meeting
@@ -115,68 +172,41 @@ function getValidPossibleMeetings($start_datetime, $end_datetime, $capacity, $bu
     JOIN Room R on R.room_id = M.room_id
     JOIN Timeslot T on T.timeslot_id = M.timeslot_id
     JOIN Building B on B.address = R.address
-    WHERE T.start_datetime < '" . $end_datetime . "'
+    WHERE NOT EXISTS (
+      SELECT * FROM Timeslot_in_Room TR
+      WHERE TR.room_id = R.room_id AND TR.timeslot_id = R.timeslot_id
+    )
+    AND T.start_datetime < '" . $end_datetime . "'
     AND T.end_datetime < '" . $start_datetime . "'
     AND CAST(T.end_datetime AS TIME) < B.close_time
     AND CAST(T.start_datetime AS TIME) > B.open_time
     AND '" . $start_datetime . "' < '" . $end_datetime . "'";
       
-  if ($tv_required) { $query .= "AND R.has_tv = TRUE" }
-  if ($whiteboard_required) { $query .= "AND R.has_whiteboard = TRUE" }
+  if ($tv_required) { $query .= "AND R.has_tv = TRUE"; }
+  if ($whiteboard_required) { $query .= "AND R.has_whiteboard = TRUE"; }
   if ($capacity != -1) { $query .= "AND R.capacity >= '" . $capacity . "'"; }
   if ($building_name != "NONE") { $query .= "AND B.building_name = '" . $building_name . "'"; }
   
   $statement = $db->query($query);
+  $raw_data = $statement->fetchall();
   $statement->closeCursor();
-}
 
-// meeting.html functions
-/*
---fetch list of a user's meetings (getUserMeetings, getMeetingAttendees)
---delete a meeting (deleteMeeting)
---edit a meeting / edit modal (editMeeting)
---sort meetings (sortMeeting)
-*/
+  // Return formatting
+  $to_return = array();
+  foreach($raw_data as $meeting) {
+    $attendees = getMeetingAttendees($meeting["meeting_id"]);
+    $to_add = array(
+      "start_time" => $meeting["start_datetime"],
+      "end_time" => $meeting["end_datetime"],
+      "building_room" => $meeting["building_name"] . " - " . $meeting["room_number"],
+      "has_tv" => $meeting["has_tv"],
+      "has_whiteboard" => $meeting["has_whiteboard"],
+      "capacity" => $meeting["capacity"]
+    );
+    $to_return[$meeting["meeting_id"]] = $to_add;
+  }
 
-
-function addFriend($name, $major, $year) {
-    global $db;
-    $query = "INSERT INTO friends VALUES('" . $name . "', '" . $major . "', " . $year . ")";
-    $statement = $db->query($query);
-    $statement->closeCursor();
-}
-
-function updateFriend($name, $major, $year, $friend_to_update) {
-    global $db;
-    $query = "UPDATE friends SET name='" . $name . "', major='" . $major . "', year=" . $year . " WHERE name='" . $friend_to_update . "'";
-    $statement = $db->query($query);
-    $statement->closeCursor();
-}
-
-function getAllFriends() {
-    global $db;
-    $query = "SELECT * FROM friends";
-    $statement = $db->query($query);
-    $results = $statement->fetchAll();
-    $statement->closeCursor();
-    return $results;
-}
-
-function getFriend_byName($name) {
-    global $db;
-    $query = "SELECT * FROM friends WHERE name = '" . $name . "'";
-    $statement = $db->query($query);
-    $results = $statement->fetch();
-    $statement->closeCursor();
-
-    return $results;
-}
-
-function deleteFriend($name) {
-    global $db;
-    $query = "DELETE FROM friends WHERE name = '" . $name . "'";
-    $statement = $db->query($query);
-    $statement->closeCursor();
+  return($to_return);
 }
 
 ?>

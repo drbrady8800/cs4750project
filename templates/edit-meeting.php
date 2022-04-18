@@ -1,13 +1,20 @@
 
 <?php
-  include "header.php";
-  require('../connect-db.php');
-  require('../query-funcs.php');
+include "header.php";
+require('../query-funcs.php');
+require('../connect-db.php');
 
-  $buildings = getBuildings();
+$meeting_data;
+if (isset($_GET["meeting_id"]) && !isset($meeting_data))
+{
+  $meeting_data = getMeetingInfo($_GET["meeting_id"]);
+}
+
+$buildings = getBuildings();
+
 ?>
 
-<!-- Begin Create Meeting -->
+<!-- Begin Edit Meeting -->
 <!DOCTYPE HTML>
 <section class="py-5 mt-5">
       <div class="container py-5">
@@ -33,6 +40,7 @@
                   type="date"
                   name="meeting-date"
                   required=""
+                  value="<?php echo $meeting_data["date"]?>"
                 />
               </div>
               <div class="input-group text-capitalize" style="padding: 0.5rem">
@@ -42,6 +50,7 @@
                   type="time"
                   name="meeting-time-start"
                   required=""
+                  value="<?php echo $meeting_data["start_time"]?>"
                 />
               </div>
               <div class="input-group text-capitalize" style="padding: 0.5rem">
@@ -51,6 +60,7 @@
                   type="time"
                   name="meeting-time-end"
                   required=""
+                  value="<?php echo $meeting_data["end_time"]?>"
                 />
               </div>
               <div class="input-group text-capitalize" style="padding: 0.5rem">
@@ -63,6 +73,7 @@
                   placeholder="number of people"
                   required=""
                   name="attending-number"
+                  value="<?php echo count(explode(", ", $meeting_data["attendees"]))?>"
                 />
               </div>
               <div
@@ -80,7 +91,7 @@
                       aria-expanded="false"
                       aria-controls="building-select .item-1"
                     >
-                      Select Building (optional)
+                      Select Buildings (optional)
                     </button>
                   </h2>
                   <div
@@ -100,6 +111,7 @@
                             type="radio"
                             name="Group"
                             id=<?php echo $building["building_name"] ?>
+                            <?php echo ($meeting_data['building_name']==$building["building_name"] ? 'checked' : '');?>
                           />
                           <label class="form-check-label" for="flexRadioDefault2"><?php echo $building["building_name"] ?></label>
                         </div>
@@ -116,6 +128,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-2"
+                  <?php echo ($meeting_data['tv_required']==1 ? 'checked' : '');?>
                 /><label class="form-check-label" for="formCheck-2"
                   >TV Required?</label
                 >
@@ -128,6 +141,7 @@
                   class="form-check-input"
                   type="checkbox"
                   id="formCheck-4"
+                  <?php echo ($meeting_data['whiteboard_required']==1 ? 'checked' : '');?>
                 /><label class="form-check-label" for="formCheck-4"
                   >Whiteboard Required?</label
                 >
@@ -138,13 +152,13 @@
               type="submit"
               style="margin-top: 1rem"
             >
-              Submit
+              Save
             </button>
           </div>
         </div>
       </div>
     </section>
-    <!-- end create meeting -->
+    <!-- end edit meeting -->
 
 <?php
 include "footer.php";

@@ -1,6 +1,6 @@
 <?php
 require('connect-db.php');
-require('friend-db.php');
+require('query-funcs.php');
 
 $list_of_friends = getAllFriends();
 $friend_to_update = null;
